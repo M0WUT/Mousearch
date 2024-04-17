@@ -7,7 +7,7 @@ from time import sleep
 
 import pcbnew
 
-from .common import ErrorDialog, WarningDialog
+from .common import ErrorDialog, InfoDialog, WarningDialog
 from .mouser_api import MouserAPI
 
 
@@ -63,16 +63,26 @@ class Mousearch:
             message=f"To avoid Mouser DDOS, this has to be rate limited to 30 items per minute. Expected completion is {ceil(len(bom) / 30)} minutes",
             title="This may take a while...",
         )
+        issues = {}
         for sub_bom in sub_boms:
             start_time = datetime.now()
             for mpn, quantity in sub_bom:
                 available_quantity = mouser_api.check_for_stock(mpn)
-                if available_quantity < quantity:
-
-                    WarningDialog(
-                        message=f"Could not find enough stock for {mpn} at Mouser. Required: {quantity}, Available: {available_quantity}",
-                        title="Out of stock",
+                if available_quantity == -1:
+                    issues[mpn] = "Not found at Mouser"
+                elif available_quantity < quantity:
+                    issues[mpn] = (
+                        f"Required: {quantity}, Available: {available_quantity}"
                     )
-            time_to_sleep = 61 - (datetime.now() - start_time).seconds
+
+            time_to_sleep = 65 - (datetime.now() - start_time).seconds
             if time_to_sleep > 0:
                 sleep(time_to_sleep)
+
+        if issues:
+            warning_string = "Issues found with the following parts:\n"
+            for mpn, issue in issues.items():
+                warning_string += f"* {mpn}:    {issue}\n"
+            WarningDialog(warning_string, "BOM Issues found")
+        else:
+            InfoDialog("No BOM issues found", "Mousearch")

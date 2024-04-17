@@ -1,26 +1,32 @@
 import wx
 
 
-class WarningDialog:
-    def __init__(self, message: str, title: str):
+class BaseDialog:
+    def __init__(self, message: str, title: str, style):
         dlg = wx.MessageDialog(
             parent=None,
             message=message,
             caption=title,
-            style=wx.OK | wx.ICON_WARNING,
+            style=style,
         )
         dlg.ShowModal()
         dlg.Destroy()
 
 
-class ErrorDialog:
+class InfoDialog(BaseDialog):
     def __init__(self, message: str, title: str):
-        dlg = wx.MessageDialog(
-            parent=None,
-            message=message,
-            caption=title,
-            style=wx.OK | wx.ICON_ERROR,
+        super().__init__(message, title, style=wx.OK | wx.ICON_INFORMATION)
+
+
+class WarningDialog(BaseDialog):
+    def __init__(self, message: str, title: str):
+        super().__init__(
+            message=message, title=title, style=wx.OK | wx.ICON_WARNING
         )
 
-        dlg.ShowModal()
-        dlg.Destroy()
+
+class ErrorDialog(BaseDialog):
+    def __init__(self, message: str, title: str):
+        super().__init__(
+            message=message, title=title, style=wx.OK | wx.ICON_ERROR
+        )

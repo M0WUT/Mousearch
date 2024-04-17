@@ -59,20 +59,17 @@ class MouserAPI:
         x = MouserBaseRequest(self.api_key)
         result = x.post(
             url="search/keyword",
-            data={
-                "SearchByKeywordRequest": {
-                    "keyword": f"{part_number}",
-                    "searchOptions": 4,  # Only return In Stock results
-                }
-            },
+            data={"SearchByKeywordRequest": {"keyword": f"{part_number}"}},
         ).json()
 
         errors = result["Errors"]
 
         assert not errors, f"Query for {part_number} return errors: {errors}"
         # Remove any options for volume ordering and extra long part numbers
-        parts = [x for x in result["SearchResults"]["Parts"] if x["Min"] == "1"]
-        for x in parts:
+        parts = [x for x in result["SearchResults"]["Parts"]]
+        if len(parts) == 0:
+            return -1
+        for x in [y for y in parts if y["Min"] == "1"]:
             in_stock_quantity = int(x["AvailabilityInStock"])
             if in_stock_quantity:
                 return in_stock_quantity
