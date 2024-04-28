@@ -12,6 +12,9 @@ from .common import ErrorDialog, InfoDialog, WarningDialog
 from .mouser_api import MouserAPI
 from .farnell_api import FarnellAPI
 
+MOUSER_BIT = 1 << 1
+FARNELL_BIT = 1 << 0
+
 
 class Mousearch:
     def __init__(self, board: pcbnew.BOARD):
@@ -68,33 +71,41 @@ class Mousearch:
         )
         issues = {}
 
+        found_parts = {}
+
+        for mpn, quantity in bom.items():
+            score = 0
+            # Check Mouser
+            if mouser_api.check_for_stock(mpn) >= quantity:
+                score += MOUSER_BIT
+
+            # Check Farnell
+            if farnell_api.check_for_stock(mpn) >= quantity:
+                score += FARNELL_BIT
+
+            found_parts[mpn] = score
+            sleep(2)
+        
+        # Print report in sorted order
         with open(pathlib.Path(__file__).parent.resolve() / "results.md", "w") as file:
             file.write("| MPN | Mouser | Farnell |\r")
             file.write("| --- | --- | --- |\r")
-            for mpn, quantity in bom.items():
-                file.write(f"| {mpn}  ")
-                # Check Mouser
-                mouser_available_quantity = mouser_api.check_for_stock(mpn)
-                if mouser_available_quantity == -1:
-                    file.write("| ❓ ")
-                elif mouser_available_quantity < quantity:
-                    file.write("| ❌ ")
-                else:
+            for mpn, score in sorted(found_parts.items(), key=lambda item: item[1]):
+                
+                file.write(f"| {mpn} ")
+                if score & MOUSER_BIT:
                     file.write("| ✅ ")
-                # Check Farnell
-                farnell_available_quantity = farnell_api.check_for_stock(mpn)
-                if farnell_available_quantity == -1:
-                    file.write("| ❓ ")
-                elif farnell_available_quantity < quantity:
-                    file.write("| ❌ ")
                 else:
+                    file.write("| ❌ ")
+
+                if score & FARNELL_BIT:
                     file.write("| ✅ ")
+                else:
+                    file.write("| ❌ ")
 
                 file.write("|\r")
 
-                sleep(2)
-
-                if mouser_available_quantity < quantity and farnell_available_quantity < quantity:
+                if score == 0:
                     issues[mpn] = "Not found in Mouser or Farnell"
 
             if issues:
