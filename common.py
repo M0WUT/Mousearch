@@ -20,13 +20,9 @@ class InfoDialog(BaseDialog):
 
 class WarningDialog(BaseDialog):
     def __init__(self, message: str, title: str):
-        super().__init__(
-            message=message, title=title, style=wx.OK | wx.ICON_WARNING
-        )
+        super().__init__(message=message, title=title, style=wx.OK | wx.ICON_WARNING)
 
 
 class ErrorDialog(BaseDialog):
     def __init__(self, message: str, title: str):
-        super().__init__(
-            message=message, title=title, style=wx.OK | wx.ICON_ERROR
-        )
+        super().__init__(message=message, title=title, style=wx.OK | wx.ICON_ERROR)
