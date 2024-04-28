@@ -11,15 +11,6 @@ from .common import ErrorDialog, InfoDialog, WarningDialog
 from .mouser_api import MouserAPI
 
 
-# Copied from https://realpython.com/how-to-split-a-python-list-into-chunks/
-def batched(iterable, num_per_batch):
-    if num_per_batch < 1:
-        raise ValueError("Batches must be at least 1 item in size")
-    it = iter(iterable)
-    while batch := tuple(islice(it, num_per_batch)):
-        yield batch
-
-
 class Mousearch:
     def __init__(self, board: pcbnew.BOARD):
         self.board = board
@@ -52,32 +43,27 @@ class Mousearch:
                 mouser_api = MouserAPI(api_key)
         except FileNotFoundError:
             ErrorDialog(
-                message="Please add a Mouser Search API key in 'api_key.txt' in your Kicad scripting directory",
+                message=f"Please add a Mouser Search API key in 'api_key.txt' in {pathlib.Path(__file__).parent.resolve()}",
                 title="No API Key found",
             )
             return
 
         # Have to batch in 30 items per minute to avoid Mouser maximum calls per minute limit
-        sub_boms = batched(bom.items(), 30)
         WarningDialog(
             message=f"To avoid Mouser DDOS, this has to be rate limited to 30 items per minute. Expected completion is {ceil(len(bom) / 30)} minutes",
-            title="This may take a while...",
+            title="This may take a while and won't cause Kicad to freeze until complete.",
         )
         issues = {}
-        for sub_bom in sub_boms:
-            start_time = datetime.now()
-            for mpn, quantity in sub_bom:
-                available_quantity = mouser_api.check_for_stock(mpn)
-                if available_quantity == -1:
-                    issues[mpn] = "Not found at Mouser"
-                elif available_quantity < quantity:
-                    issues[mpn] = (
-                        f"Required: {quantity}, Available: {available_quantity}"
-                    )
 
-            time_to_sleep = 65 - (datetime.now() - start_time).seconds
-            if time_to_sleep > 0:
-                sleep(time_to_sleep)
+        for mpn, quantity in bom.items():
+            available_quantity = mouser_api.check_for_stock(mpn)
+            if available_quantity == -1:
+                issues[mpn] = "Not found at Mouser"
+            elif available_quantity < quantity:
+                issues[mpn] = (
+                    f"Required: {quantity}, Available: {available_quantity}"
+                )
+            sleep(2)
 
         if issues:
             warning_string = "Issues found with the following parts:\n"
