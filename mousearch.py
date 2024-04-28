@@ -90,7 +90,7 @@ class Mousearch:
         with open(pathlib.Path(__file__).parent.resolve() / "results.md", "w") as file:
             file.write("| MPN | Mouser | Farnell |\r")
             file.write("| --- | --- | --- |\r")
-            for mpn, score in sorted(found_parts.items(), key=lambda item: item[1]):
+            for mpn, score in sorted(found_parts.items(), key=lambda item: (item[1], item[0])):
                 
                 file.write(f"| {mpn} ")
                 if score & MOUSER_BIT:
