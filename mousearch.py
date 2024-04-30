@@ -24,14 +24,14 @@ class Mousearch:
         self.mouser_key = mouser_key
         self.farnell_key = farnell_key
 
-    def generate_bom(self, top_level_schematic: pathlib.Path):
+    def generate_bom(self, top_level_schematic: pathlib.Path, output_file: pathlib.Path = "bom.csv"):
         commands = [
                 "kicad-cli",
                 "sch",
                 "export",
                 "bom",
                 "--output",
-                "bom.csv",
+                output_file,
                 "--fields",
                 "MPN,${QUANTITY}",
                 "--exclude-dnp",
@@ -39,24 +39,19 @@ class Mousearch:
                 "MPN",
                 str(top_level_schematic),
             ]
-        print(commands)
         subprocess.check_output(commands)
+        self.bom = output_file
 
-    def run(self):
+    def query_suppliers(self):
         bom = {}
-        for footprint in self.board.GetFootprints():
-            items_to_skip = [r"kibuzzard.*", r"LAYOUT.*", r"TP.*", r"H.*"]
-            reference = footprint.GetReference()
-            if any(re.search(x, reference) for x in items_to_skip):
-                continue
-            if not footprint.HasFieldByName("MPN"):
-                ErrorDialog(
-                    message=f"{footprint.GetReference()} does not have an MPN specified",
-                    title="No MPN specified",
-                )
-                return
-            else:
-                mpn = footprint.GetFieldText("MPN")
+        with open(self.bom) as bom_file:
+            for line in bom_file[1:]:
+                mpn, bom = line.split(",")
+                print(mpn)
+                print(bom)
+                assert False
+
+        
                 if mpn in bom:
                     bom[mpn] += 1
                 else:
@@ -134,3 +129,6 @@ if __name__ == "__main__":
     
     x = Mousearch(sys.argv[1], sys.argv[2], sys.argv[3])
     x.generate_bom(top_level_schematic=top_level_schematic)
+    x.query_suppliers()
+
+    
