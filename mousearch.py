@@ -43,49 +43,36 @@ class Mousearch:
         self.bom = output_file
 
     def query_suppliers(self):
-        bom = {}
-        with open(self.bom) as bom_file:
-            for line in bom_file.readlines()[1:]:
-                mpn, bom = line.split(",")
-                print(mpn)
-                print(bom)
-                assert False
 
-        
-                if mpn in bom:
-                    bom[mpn] += 1
-                else:
-                    bom[mpn] = 1
-
-        # Now have a dict with MPN: quantity
         mouser_api = MouserAPI(self.mouser_key)
         farnell_api = FarnellAPI(self.farnell_key)
 
-        # Have to batch in 30 items per minute to avoid Mouser maximum calls per minute limit
-        # WarningDialog(
-        #     message=f"To avoid Mouser DDOS, this has to be rate limited to 30 items per minute. Expected completion is {ceil(len(bom) / 30)} minutes and will cause Kicad to freeze until complete.",
-        #     title="This may take a while...",
-        # )
-        issues = {}
-
         found_parts = {}
 
-        for mpn, quantity in tqdm(list(bom.items())):
-            start_time = datetime.now()
-            score = 0
-            # Check Mouser
-            if mouser_api.check_for_stock(mpn) >= quantity:
-                score += MOUSER_BIT
+        with open(self.bom) as bom_file:
+            for line in tqdm(bom_file.readlines()[1:]):
+                mpn, quantity = line.split(",")
+                mpn = re.sub('"', '', mpn)
+                quantity = int(re.sub('"', '', quantity))
+                print(mpn)
+                print(quantity)
+                assert False
+                start_time = datetime.now()
+                score = 0
+                # Check Mouser
+                if mouser_api.check_for_stock(mpn) >= quantity:
+                    score += MOUSER_BIT
 
-            # Check Farnell
-            if farnell_api.check_for_stock(mpn) >= quantity:
-                score += FARNELL_BIT
+                # Check Farnell
+                if farnell_api.check_for_stock(mpn) >= quantity:
+                    score += FARNELL_BIT
 
-            found_parts[mpn] = score
-            while (datetime.now() - start_time).seconds < 2:
-                sleep(0.1)
+                found_parts[mpn] = score
+                while (datetime.now() - start_time).seconds < 2:
+                    sleep(0.1)
 
         # Print report in sorted order
+        issues = {}
         with open(pathlib.Path(__file__).parent.resolve() / "results.md", "w") as file:
             file.write("| MPN | Mouser | Farnell |\r")
             file.write("| --- | --- | --- |\r")
