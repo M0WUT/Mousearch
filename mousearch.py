@@ -9,7 +9,6 @@ from tqdm import tqdm
 import sys
 import os
 import subprocess
-import pcbnew
 
 from common import ErrorDialog, InfoDialog, WarningDialog
 from mouser_api import MouserAPI
@@ -20,8 +19,8 @@ FARNELL_BIT = 1 << 0
 
 
 class Mousearch:
-    def __init__(self, board: pcbnew.BOARD, mouser_key: str, farnell_key: str):
-        self.board = board
+    def __init__(self, bom: pathlib.Path, mouser_key: str, farnell_key: str):
+        self.bom = bom
         self.mouser_key = mouser_key
         self.farnell_key = farnell_key
 
@@ -132,5 +131,5 @@ if __name__ == "__main__":
     assert len(found_projects) == 1, f"Multiple projects found: {found_projects}"
     top_level_schematic = found_projects[0].stem.with_suffix(".kicad_pcb")
     print(f"Generating BOM for {top_level_schematic}")
-    x = Mousearch(pcbnew.LoadBoard(sys.argv[1]), sys.argv[2], sys.argv[3])
+    x = Mousearch(sys.argv[1], sys.argv[2], sys.argv[3])
     x.run()
