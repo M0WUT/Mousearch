@@ -81,4 +81,4 @@ if __name__ == "__main__":
     with open("./farnell_key.txt", "r") as file:
         api_key = file.readline()
     x = FarnellAPI(api_key, logger)
-    print(x.check_for_stock("LTC8650SEV#PBF"))
+    print(x.check_for_stock("RK73H1ETTP1603"))
