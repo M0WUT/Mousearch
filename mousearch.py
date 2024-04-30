@@ -34,7 +34,7 @@ class Mousearch:
                 "bom.csv",
                 "--exclude-dnp",
                 "--group-by",
-                "MPN",
+                '\"MPN\"',
                 top_level_schematic,
             ]
         print(commands)
