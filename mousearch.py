@@ -129,7 +129,7 @@ if __name__ == "__main__":
     input_dir = pathlib.Path(sys.argv[1])
     found_projects = list(input_dir.rglob("*.kicad_pro"))
     assert len(found_projects) == 1, f"Multiple projects found: {found_projects}"
-    top_level_schematic = found_projects[0].with_suffix(".kicad_pcb")
+    top_level_schematic = found_projects[0].with_suffix(".kicad_sch")
     print(f"Generating BOM for {top_level_schematic}")
     
     x = Mousearch(sys.argv[1], sys.argv[2], sys.argv[3])
