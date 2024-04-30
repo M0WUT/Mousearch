@@ -7,7 +7,8 @@ from time import sleep
 import pathlib
 from tqdm import tqdm
 import sys
-import os 
+import os
+import subprocess
 import pcbnew
 
 from common import ErrorDialog, InfoDialog, WarningDialog
@@ -23,6 +24,24 @@ class Mousearch:
         self.board = board
         self.mouser_key = mouser_key
         self.farnell_key = farnell_key
+
+    def generate_bom(self, top_level_schematic: pathlib.Path):
+        subprocess.run(
+            [
+                "kicad-cli",
+                "sch",
+                "export",
+                "bom",
+                "--output",
+                "bom.csv",
+                "--fields",
+                "'MPN,${QUANTITY}'",
+                "--exclude-dnp",
+                "--group-by",
+                "MPN",
+                top_level_schematic,
+            ]
+        )
 
     def run(self):
         bom = {}
@@ -69,15 +88,17 @@ class Mousearch:
                 score += FARNELL_BIT
 
             found_parts[mpn] = score
-            while(datetime.now() - start_time).seconds < 2:
+            while (datetime.now() - start_time).seconds < 2:
                 sleep(0.1)
-        
+
         # Print report in sorted order
         with open(pathlib.Path(__file__).parent.resolve() / "results.md", "w") as file:
             file.write("| MPN | Mouser | Farnell |\r")
             file.write("| --- | --- | --- |\r")
-            for mpn, score in sorted(found_parts.items(), key=lambda item: (item[1], item[0])):
-                
+            for mpn, score in sorted(
+                found_parts.items(), key=lambda item: (item[1], item[0])
+            ):
+
                 file.write(f"| {mpn} ")
                 if score & MOUSER_BIT:
                     file.write("| ✅ ")
@@ -99,12 +120,17 @@ class Mousearch:
                 for mpn, issue in issues.items():
                     warning_string += f"* {mpn}:    {issue}\n"
                 print(warning_string)
-                #WarningDialog(warning_string, "BOM Issues found")
+                # WarningDialog(warning_string, "BOM Issues found")
             else:
                 print("OK")
                 # InfoDialog("No BOM issues found", "Mousearch")
 
 
-if __name__ == '__main__':   
+if __name__ == "__main__":
+    input_dir = pathlib.Path(sys.argv[1])
+    found_projects = list(input_dir.rglob("*.kicad_pro"))
+    assert len(found_projects) == 1, f"Multiple projects found: {found_projects}"
+    top_level_schematic = found_projects[0].stem.with_suffix(".kicad_pcb")
+    print(f"Generating BOM for {top_level_schematic}")
     x = Mousearch(pcbnew.LoadBoard(sys.argv[1]), sys.argv[2], sys.argv[3])
     x.run()
