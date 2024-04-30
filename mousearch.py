@@ -112,7 +112,7 @@ if __name__ == "__main__":
     print(f"Generating BOM for {top_level_schematic}")
     
     x = Mousearch(sys.argv[2], sys.argv[3])
-    x.generate_bom(top_level_schematic=top_level_schematic)
+    x.generate_bom(top_level_schematic=top_level_schematic, output_file=pathlib.Path("../build/bom.md"))
     x.query_suppliers(sys.argv[4])
 
     
