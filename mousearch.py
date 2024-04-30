@@ -32,6 +32,8 @@ class Mousearch:
                 "bom",
                 "--output",
                 "bom.csv",
+                "--fields",
+                "\'MPN,${QUANTITY}\'",
                 "--exclude-dnp",
                 "--group-by",
                 '\"MPN\"',
