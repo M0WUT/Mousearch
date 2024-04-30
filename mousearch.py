@@ -45,7 +45,7 @@ class Mousearch:
     def query_suppliers(self):
         bom = {}
         with open(self.bom) as bom_file:
-            for line in bom_file[1:]:
+            for line in bom_file.readlines()[1:]:
                 mpn, bom = line.split(",")
                 print(mpn)
                 print(bom)
