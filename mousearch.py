@@ -19,8 +19,7 @@ FARNELL_BIT = 1 << 0
 
 
 class Mousearch:
-    def __init__(self, bom: pathlib.Path, mouser_key: str, farnell_key: str):
-        self.bom = bom
+    def __init__(self, mouser_key: str, farnell_key: str):
         self.mouser_key = mouser_key
         self.farnell_key = farnell_key
 
@@ -42,7 +41,7 @@ class Mousearch:
         subprocess.check_output(commands)
         self.bom = output_file
 
-    def query_suppliers(self):
+    def query_suppliers(self, output_file: pathlib.Path):
 
         mouser_api = MouserAPI(self.mouser_key)
         farnell_api = FarnellAPI(self.farnell_key)
@@ -54,9 +53,7 @@ class Mousearch:
                 mpn, quantity = line.split(",")
                 mpn = re.sub('"', '', mpn)
                 quantity = int(re.sub('"', '', quantity))
-                print(mpn)
-                print(quantity)
-                assert False
+
                 start_time = datetime.now()
                 score = 0
                 # Check Mouser
@@ -73,7 +70,7 @@ class Mousearch:
 
         # Print report in sorted order
         issues = {}
-        with open(pathlib.Path(__file__).parent.resolve() / "results.md", "w") as file:
+        with open(output_file, "w") as file:
             file.write("| MPN | Mouser | Farnell |\r")
             file.write("| --- | --- | --- |\r")
             for mpn, score in sorted(
@@ -114,8 +111,8 @@ if __name__ == "__main__":
     top_level_schematic = found_projects[0].with_suffix(".kicad_sch")
     print(f"Generating BOM for {top_level_schematic}")
     
-    x = Mousearch(sys.argv[1], sys.argv[2], sys.argv[3])
+    x = Mousearch(sys.argv[2], sys.argv[3])
     x.generate_bom(top_level_schematic=top_level_schematic)
-    x.query_suppliers()
+    x.query_suppliers(sys.argv[4])
 
     
