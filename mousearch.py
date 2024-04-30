@@ -36,8 +36,8 @@ class Mousearch:
                 "\'MPN,${QUANTITY}\'",
                 "--exclude-dnp",
                 "--group-by",
-                '\"MPN\"',
-                top_level_schematic,
+                "MPN",
+                str(top_level_schematic),
             ]
         print(commands)
         subprocess.check_output(commands)
