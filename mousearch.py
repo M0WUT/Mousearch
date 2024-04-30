@@ -7,7 +7,7 @@ from time import sleep
 import pathlib
 from tqdm import tqdm
 import sys
-
+import os 
 import pcbnew
 
 from common import ErrorDialog, InfoDialog, WarningDialog
@@ -105,28 +105,6 @@ class Mousearch:
                 # InfoDialog("No BOM issues found", "Mousearch")
 
 
-if __name__ == '__main__':
-    try:
-        pwd = pathlib.Path(__file__).parent.resolve()
-        with open(pwd / "farnell_key.txt", "r") as file:
-            farnell_key = file.readline()
-    except FileNotFoundError:
-        ErrorDialog(
-            message=f"Please add an element14 API key in 'farnell_key.txt' in {pathlib.Path(__file__).parent.resolve()}",
-            title="No API Key found",
-        )
-        sys.exit(1)
-
-    try:
-        pwd = pathlib.Path(__file__).parent.resolve()
-        with open(pwd / "mouser_key.txt", "r") as file:
-            mouser_key = file.readline()
-    except FileNotFoundError:
-        ErrorDialog(
-            message=f"Please add an element14 API key in 'farnell_key.txt' in {pathlib.Path(__file__).parent.resolve()}",
-            title="No API Key found",
-        )
-        sys.exit(1)
-    
-    x = Mousearch(pcbnew.LoadBoard("C:\\Users\\dan\\Documents\\kicad_wut\\projects\\Master-Timing-Reference\\Master Timing Card.kicad_pcb"), mouser_key, farnell_key)
+if __name__ == '__main__':   
+    x = Mousearch(pcbnew.LoadBoard(sys.argv[1]), sys.argv[2], sys.argv[3])
     x.run()
