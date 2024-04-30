@@ -25,8 +25,7 @@ class Mousearch:
         self.farnell_key = farnell_key
 
     def generate_bom(self, top_level_schematic: pathlib.Path):
-        subprocess.run(
-            [
+        commands = [
                 "kicad-cli",
                 "sch",
                 "export",
@@ -40,7 +39,8 @@ class Mousearch:
                 "MPN",
                 top_level_schematic,
             ]
-        )
+        print(commands)
+        subprocess.check_output(commands)
 
     def run(self):
         bom = {}
